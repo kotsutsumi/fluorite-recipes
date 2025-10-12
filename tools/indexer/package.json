@@ -1,0 +1,36 @@
+{
+  "name": "@fluorite/indexer",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc --project tsconfig.json",
+    "typecheck": "tsc --noEmit",
+    "index": "tsx src/cli.ts",
+    "dev": "tsx watch src/cli.ts"
+  },
+  "bin": {
+    "fluorite-indexer": "dist/cli.js"
+  },
+  "dependencies": {
+    "commander": "^12.1.0",
+    "globby": "^14.0.2",
+    "gray-matter": "^4.0.3",
+    "github-slugger": "^2.0.0",
+    "mdast-util-to-string": "^4.0.0",
+    "remark-parse": "^11.0.0",
+    "remark-stringify": "^11.0.0",
+    "unified": "^11.0.4",
+    "unist-util-visit": "^5.0.0",
+    "uuid": "^9.0.1",
+    "zod": "^3.23.8",
+    "better-sqlite3": "^9.5.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.5.2",
+    "@types/better-sqlite3": "^7.6.7",
+    "@types/uuid": "^9.0.7",
+    "tsx": "^4.16.2",
+    "typescript": "^5.5.4"
+  }
+}
