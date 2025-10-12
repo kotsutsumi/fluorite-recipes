@@ -1102,7 +1102,7 @@ interface DocumentationStatus {
 
 ---
 
-## �🚀 今後のロードマップ
+## 🚀 今後のロードマップ
 
 ### v1.0.0 リリース予定機能
 
