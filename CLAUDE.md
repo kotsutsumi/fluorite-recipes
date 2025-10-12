@@ -4,115 +4,198 @@
 
 ## プロジェクト概要
 
-Fluorite Recipesは、Next.js 15アプリケーションを含むモノレポです。メインの本番アプリケーションは `apps/base` にあり、React 19、TypeScript 5（strict mode）、Tailwind CSS v4、およびBiomeをlinting/formattingに使用したApp Routerアーキテクチャを採用しています。
+Fluorite Recipesは、Webとモバイルアプリケーションのためのモノレポです。Next.js 15（Web）とExpo（モバイル）の2つのアプリがあり、TypeScript 5（strict mode）、最新のReact、モダンなツールチェーンを使用しています。
 
-## 作業ディレクトリ
+## 重要: 作業ディレクトリ
 
-**重要**: すべての開発コマンドは、リポジトリルートではなく `apps/base/` ディレクトリから実行する必要があります。
+**開発コマンドは各アプリのディレクトリから実行する必要があります。リポジトリルートからは実行しないでください。**
 
 ```bash
-cd apps/base
+# Next.js Webアプリ
+cd apps/nextjs/base
+
+# Expo モバイルアプリ
+cd apps/expo/base
 ```
 
 ## 開発コマンド
 
-### 基本コマンド
+### Next.js Webアプリ（`apps/nextjs/base`）
 
 ```bash
-# 開発サーバーを起動（Turbopack有効）
-npm run dev
-# または
+# 開発サーバー起動（Turbopack有効） - http://localhost:3000
 pnpm dev
+# または: npm run dev
 
 # 本番ビルド
-npm run build
+pnpm build
 
-# 本番サーバーを起動
-npm run start
+# 本番サーバー起動
+pnpm start
 
-# リンターを実行
-npm run lint
+# リント
+pnpm lint
 
-# コードを自動フォーマット
-npm run format
+# 自動フォーマット
+pnpm format
 ```
 
-### ポート情報
+### Expo モバイルアプリ（`apps/expo/base`）
 
-開発サーバーは `http://localhost:3000` で起動します
+```bash
+# 開発サーバー起動
+pnpm start
+
+# iOS シミュレーター
+pnpm ios
+
+# Android エミュレーター
+pnpm android
+
+# Web ブラウザ
+pnpm web
+
+# リント
+pnpm lint
+```
 
 ## アーキテクチャ
 
-### Next.js 15 App Router構造
+### モノレポ構造
 
-- **エントリーポイント**: `apps/base/src/app/page.tsx` - ホームページ
-- **ルートレイアウト**: `apps/base/src/app/layout.tsx` - Geistフォントとグローバルスタイルを含む共有レイアウト
-- **グローバルスタイル**: `apps/base/src/app/globals.css` - TailwindのインポートとCSS変数の定義
-- **静的アセット**: `apps/base/public/` - SVGおよび静的ファイル
+```
+apps/
+├── nextjs/base/    # Next.js 15 App Router Webアプリ
+│   ├── src/app/    # ページとレイアウト
+│   ├── public/     # 静的アセット
+│   └── biome.json  # Biome設定
+└── expo/base/      # Expo Router モバイルアプリ
+    ├── app/        # 画面とナビゲーション
+    ├── components/ # 共有UIコンポーネント
+    ├── hooks/      # カスタムフック
+    └── assets/     # 画像とアイコン
+```
 
-### 主要なアーキテクチャパターン
+### Next.js App Router構造
 
-- **デフォルトはサーバーコンポーネント**: クライアント側のインタラクティビティが必要な場合を除き、Reactサーバーコンポーネントを使用
-- **真実の情報源としてのCSS変数**: すべての色とフォントはCSS変数を使用して `globals.css` で定義
-- **Tailwind CSS v4**: トークン定義に `@theme inline` ディレクティブを使用
-- **フォント読み込み**: Geist SansとGeist Monoを `next/font/google` 経由で読み込み、CSS変数として公開
+- **`src/app/page.tsx`**: ホームページ（エントリーポイント）
+- **`src/app/layout.tsx`**: Geistフォントとグローバルスタイルを含むルートレイアウト
+- **`src/app/globals.css`**: TailwindのインポートとCSS変数、テーマトークン
+- **`public/`**: 静的アセット（SVG、画像）
+
+### Expo Router構造
+
+- **`app/`**: 画面とタブナビゲーション
+- **`components/`**: 再利用可能なUIコンポーネント
+- **`hooks/`**: カスタムReactフック
+- **`assets/`**: デバイス固有のアセット
+
+### 主要なパターン
+
+#### Next.js（Web）
+
+1. **サーバーコンポーネント優先**: デフォルトでReactサーバーコンポーネントを使用。クライアント側のインタラクティビティが必要な場合のみ `"use client"` を追加。
+
+2. **真実の情報源としてのCSS変数**: すべての色とフォントは `globals.css` でCSS変数を使用して定義：
+   ```css
+   :root {
+     --background: #ffffff;
+     --foreground: #171717;
+   }
+   ```
+
+3. **Tailwind CSS v4 の @theme inline**: 新しい `@theme inline` ディレクティブを使用したテーマトークン定義：
+   ```css
+   @theme inline {
+     --color-background: var(--background);
+     --font-sans: var(--font-geist-sans);
+   }
+   ```
+
+4. **フォント読み込みパターン**: `next/font/google` 経由でフォントを読み込み、CSS変数として公開：
+   ```typescript
+   const geistSans = Geist({
+     variable: "--font-geist-sans",
+     subsets: ["latin"],
+   });
+   ```
+
+#### Expo（モバイル）
+
+1. **Expo Router**: ファイルベースルーティング（`app/` ディレクトリ構造）
+2. **説明的な命名**: フックとコンポーネントには明確な名前を使用（`useRecipeFilters`、`RecipeCard`）
+3. **クロスプラットフォーム**: iOS、Android、Webで動作するコードを記述
 
 ### パスエイリアス
 
-TypeScriptは `@/*` エイリアスを `apps/base/src/*` にマッピングするよう設定されています：
+**Next.js**: TypeScriptは `@/*` エイリアスを `apps/nextjs/base/src/*` にマッピング：
 
 ```typescript
 import Component from "@/components/Component";
 ```
 
+**Expo**: 設定に応じてエイリアスを使用
+
 ## コーディング規約
 
 ### TypeScript
 
-- Strict mode有効
+- Strict mode有効（`strict: true`）
 - ターゲット: ES2017
-- すべてのコンポーネントは型付きReact関数コンポーネントにする
+- 型付きReact関数コンポーネントを使用
 - 公開APIには推論よりも明示的な型を優先
 
-### スタイリング
+### スタイリングガイドライン
 
-- PostCSSを使用したTailwind CSS v4
-- ユーティリティを論理的順序で配置: layout → spacing → typography
-- `globals.css` のCSS変数がテーマトークンを定義
-- ダークモードは `prefers-color-scheme` メディアクエリで処理
-- カスタムテーマトークンは `@theme inline` ブロックで定義
+#### Next.js（Web）
+- **ユーティリティ順序**: layout → spacing → typography
+- **ダークモード**: `prefers-color-scheme` メディアクエリで処理
+- **トークンソース**: `globals.css` のCSS変数が唯一の真実の情報源
 
-### コードフォーマット
+#### Expo（モバイル）
+- StyleSheetまたはTailwind CSS for React Native
+- プラットフォーム固有のスタイリングは `Platform.select()` を使用
 
+### リントとフォーマット
+
+#### Next.js（Web）
 - **ツール**: Biome 2.2.0（ESLint/Prettierではない）
 - **インデント**: 2スペース
-- **インポート整理**: Biomeの `organizeImports` で自動化
-- **ルール**: Next.jsとReactの推奨ルールを有効化
-- コミット前に `npm run format` を実行
+- **インポート整理**: `organizeImports` で自動化
+- **設定**: Next.jsとReactドメインを有効にした `biome.json`
+- **コミット前**: 常に `pnpm format` を実行
+
+#### Expo（モバイル）
+- **ツール**: `eslint-config-expo`
+- コミット前にリンターを実行
 
 ### ファイル構成
 
+#### Next.js
 - 関連コンポーネントは `src/app` 内の機能フォルダに配置
-- コンポーネントにはTypeScriptの `.tsx` 拡張子を使用、ユーティリティには `.ts` を使用
-- テストファイルは `*.test.tsx` としてコンポーネントの隣に配置（テスト追加時）
+- コンポーネントには `.tsx`、ユーティリティには `.ts` を使用
+- 将来のテスト: `*.test.tsx` をコンポーネントの隣または `__tests__/` に配置
+
+#### Expo
+- 画面は `app/` に配置
+- 共有コンポーネントは `components/` に配置
+- フックは `hooks/` に配置
+- テストはファイルの隣に配置
 
 ## テスト
 
 **現状**: テストインフラストラクチャはまだ設定されていません。
 
-**将来のテスト戦略**（AGENTS.mdより）：
-
-- フレームワーク: Vitest + React Testing Library
-- `npm run test` スクリプトを追加
-- テストは `*.test.tsx` としてコンポーネントの隣または `__tests__` フォルダに配置
-- 目標: 新規コードで80%以上のカバレッジ
-- ルーティングや非同期フローの統合テストを含める
+**将来の戦略**（テスト追加時）：
+- **フレームワーク**: Vitest + React Testing Library
+- **スクリプト**: package.jsonに `npm run test` を追加
+- **配置場所**: コンポーネントの隣に `*.test.tsx` を配置、または `__tests__/` に配置
+- **カバレッジ目標**: 新規コードで80%以上
+- **統合テスト**: ルーティングと非同期フローのテスト（Next.jsルート変更、Expoタブスタック）
 
 ## Gitワークフロー
 
-### コミットメッセージ
-
-Conventional Commits形式を使用：
+### コミットメッセージ（Conventional Commits）
 
 ```
 feat: 新機能を追加
@@ -123,35 +206,51 @@ docs: ドキュメントを更新
 
 ### ブランチ戦略
 
-- メインブランチ: `main`
-- 開発ブランチ: `develop`
-- PRは `develop` ブランチに対して作成
+- **メインブランチ**: `main`
+- **開発ブランチ**: `develop`
+- **PR**: `develop` ブランチに対して作成
 
-### プルリクエスト要件
+### PR要件
 
-- 変更内容を明確に説明
+- 変更内容の明確な説明
 - 関連するissueをリンク
-- UI変更の場合はスクリーンショットを含める
-- `npm run lint` と `npm run format` が通過することを確認
+- UI変更の場合はスクリーンショットまたは録画を含める
+- `pnpm lint` と `pnpm format` が通過することを確認
 - フォローアップタスクや技術的負債を文書化
 
 ## 環境要件
 
-- **Node.js**: Next.js 15には18.18+または20.xが必要
-- **パッケージマネージャー**: pnpm推奨、npmも動作（変更するロックファイルに合わせる）
-- `node_modules` と `.next` はバージョン管理の対象外
+- **Node.js**: 18.18+または20.x（Next.js 15に必要）
+- **パッケージマネージャー**: pnpm推奨（ロックファイル: `pnpm-lock.yaml`）
+- **Git Ignore**: `node_modules/`、`.next/`、`node_modules/`、ビルド成果物
 
 ## 設定ファイル
 
-- `biome.json` - リントとフォーマットのルール
-- `next.config.ts` - Next.js設定（現在は最小限）
-- `tsconfig.json` - strict modeのTypeScriptコンパイラオプション
-- `postcss.config.mjs` - Tailwind PostCSS設定
-- `pnpm-workspace.yaml` - モノレポワークスペース設定
+### Next.js（`apps/nextjs/base/`）
+- **`biome.json`**: リントとフォーマットルール、Next.js/Reactドメイン
+- **`next.config.ts`**: Next.js設定（現在は最小限）
+- **`tsconfig.json`**: TypeScript strict mode、パスエイリアス
+- **`postcss.config.mjs`**: Tailwind PostCSS設定
+- **`pnpm-workspace.yaml`**: モノレポワークスペース定義
+
+### Expo（`apps/expo/base/`）
+- **`app.json`**: Expo設定
+- **`tsconfig.json`**: TypeScript設定
+- **`metro.config.js`**: Metro bundler設定
 
 ## 重要な注意事項
 
-- **Turbopack**: devとbuildコマンドでデフォルトで有効
-- **React 19**: 新機能を備えた最新のReactバージョンを使用
-- **BiomeをPrettier/ESLintの代わりに使用**: プロジェクトではすべてのlinting/formattingにBiomeを使用
-- **Unknown At-Rulesを無効化**: Tailwind CSS v4互換性のためBiomeで無効化
+### Next.js（Web）
+- **Turbopack**: devとbuildコマンドでデフォルトで有効（`--turbopack` フラグ）
+- **React 19**: 新機能とパターンを備えた最新バージョンを使用
+- **BiomeをESLint/Prettierの代わりに使用**: すべてのコード品質ツールをBiomeに統合
+- **Unknown At-Rulesを無効化**: Tailwind CSS v4互換性のためBiome設定で無効化
+
+### Expo（モバイル）
+- **Expo Router**: ファイルベースルーティングシステム
+- **クロスプラットフォーム**: iOS、Android、Web対応
+- **eslint-config-expo**: Expo推奨のESLint設定を使用
+
+## 追加コンテキスト
+
+詳細なリポジトリガイドラインについては `AGENTS.md` を参照してください。
