@@ -6,152 +6,152 @@
 
 Fluorite Recipesは、Next.js 15アプリケーションを含むモノレポです。メインの本番アプリケーションは `apps/base` にあり、React 19、TypeScript 5（strict mode）、Tailwind CSS v4、およびBiomeをlinting/formattingに使用したApp Routerアーキテクチャを採用しています。
 
-## Working Directory
+## 作業ディレクトリ
 
-**IMPORTANT**: All development commands must be run from `apps/base/` directory, not the repository root.
+**重要**: すべての開発コマンドは、リポジトリルートではなく `apps/base/` ディレクトリから実行する必要があります。
 
 ```bash
 cd apps/base
 ```
 
-## Development Commands
+## 開発コマンド
 
-### Core Commands
+### 基本コマンド
 
 ```bash
-# Start development server (Turbopack enabled)
+# 開発サーバーを起動（Turbopack有効）
 npm run dev
-# or
+# または
 pnpm dev
 
-# Production build
+# 本番ビルド
 npm run build
 
-# Start production server
+# 本番サーバーを起動
 npm run start
 
-# Run linter
+# リンターを実行
 npm run lint
 
-# Auto-format code
+# コードを自動フォーマット
 npm run format
 ```
 
-### Port Information
+### ポート情報
 
-Development server runs at `http://localhost:3000`
+開発サーバーは `http://localhost:3000` で起動します
 
-## Architecture
+## アーキテクチャ
 
-### Next.js 15 App Router Structure
+### Next.js 15 App Router構造
 
-- **Entry Point**: `apps/base/src/app/page.tsx` - Home page
-- **Root Layout**: `apps/base/src/app/layout.tsx` - Shared layout with Geist fonts and global styles
-- **Global Styles**: `apps/base/src/app/globals.css` - Tailwind imports and CSS variable definitions
-- **Static Assets**: `apps/base/public/` - SVGs and static files
+- **エントリーポイント**: `apps/base/src/app/page.tsx` - ホームページ
+- **ルートレイアウト**: `apps/base/src/app/layout.tsx` - Geistフォントとグローバルスタイルを含む共有レイアウト
+- **グローバルスタイル**: `apps/base/src/app/globals.css` - TailwindのインポートとCSS変数の定義
+- **静的アセット**: `apps/base/public/` - SVGおよび静的ファイル
 
-### Key Architectural Patterns
+### 主要なアーキテクチャパターン
 
-- **Server Components by Default**: Use React Server Components unless client interactivity is needed
-- **CSS Variables as Source of Truth**: All colors and fonts defined in `globals.css` using CSS variables
-- **Tailwind CSS v4**: Uses `@theme inline` directive for token definition
-- **Font Loading**: Geist Sans and Geist Mono loaded via `next/font/google` and exposed as CSS variables
+- **デフォルトはサーバーコンポーネント**: クライアント側のインタラクティビティが必要な場合を除き、Reactサーバーコンポーネントを使用
+- **真実の情報源としてのCSS変数**: すべての色とフォントはCSS変数を使用して `globals.css` で定義
+- **Tailwind CSS v4**: トークン定義に `@theme inline` ディレクティブを使用
+- **フォント読み込み**: Geist SansとGeist Monoを `next/font/google` 経由で読み込み、CSS変数として公開
 
-### Path Aliases
+### パスエイリアス
 
-TypeScript configured with `@/*` alias mapping to `apps/base/src/*`:
+TypeScriptは `@/*` エイリアスを `apps/base/src/*` にマッピングするよう設定されています：
 
 ```typescript
 import Component from "@/components/Component";
 ```
 
-## Code Standards
+## コーディング規約
 
 ### TypeScript
 
-- Strict mode enabled
-- Target: ES2017
-- All components should be typed React function components
-- Prefer explicit types over inference for public APIs
+- Strict mode有効
+- ターゲット: ES2017
+- すべてのコンポーネントは型付きReact関数コンポーネントにする
+- 公開APIには推論よりも明示的な型を優先
 
-### Styling
+### スタイリング
 
-- Tailwind CSS v4 using PostCSS
-- Order utilities logically: layout → spacing → typography
-- CSS variables in `globals.css` define theme tokens
-- Dark mode handled via `prefers-color-scheme` media query
-- Custom theme tokens defined in `@theme inline` block
+- PostCSSを使用したTailwind CSS v4
+- ユーティリティを論理的順序で配置: layout → spacing → typography
+- `globals.css` のCSS変数がテーマトークンを定義
+- ダークモードは `prefers-color-scheme` メディアクエリで処理
+- カスタムテーマトークンは `@theme inline` ブロックで定義
 
-### Code Formatting
+### コードフォーマット
 
-- **Tool**: Biome 2.2.0 (not ESLint/Prettier)
-- **Indentation**: 2 spaces
-- **Import Organization**: Automatic via Biome's `organizeImports`
-- **Rules**: Next.js and React recommended rules enabled
-- Run `npm run format` before committing
+- **ツール**: Biome 2.2.0（ESLint/Prettierではない）
+- **インデント**: 2スペース
+- **インポート整理**: Biomeの `organizeImports` で自動化
+- **ルール**: Next.jsとReactの推奨ルールを有効化
+- コミット前に `npm run format` を実行
 
-### File Organization
+### ファイル構成
 
-- Co-locate related components in feature folders within `src/app`
-- Use TypeScript `.tsx` extension for components, `.ts` for utilities
-- Keep test files as `*.test.tsx` adjacent to components (when testing is added)
+- 関連コンポーネントは `src/app` 内の機能フォルダに配置
+- コンポーネントにはTypeScriptの `.tsx` 拡張子を使用、ユーティリティには `.ts` を使用
+- テストファイルは `*.test.tsx` としてコンポーネントの隣に配置（テスト追加時）
 
-## Testing
+## テスト
 
-**Current State**: No testing infrastructure configured yet.
+**現状**: テストインフラストラクチャはまだ設定されていません。
 
-**Future Testing Strategy** (from AGENTS.md):
+**将来のテスト戦略**（AGENTS.mdより）：
 
-- Framework: Vitest + React Testing Library
-- Add `npm run test` script
-- Co-locate tests as `*.test.tsx` next to components or in `__tests__` folders
-- Target: ≥80% coverage on new code
-- Include integration tests for routing and async flows
+- フレームワーク: Vitest + React Testing Library
+- `npm run test` スクリプトを追加
+- テストは `*.test.tsx` としてコンポーネントの隣または `__tests__` フォルダに配置
+- 目標: 新規コードで80%以上のカバレッジ
+- ルーティングや非同期フローの統合テストを含める
 
-## Git Workflow
+## Gitワークフロー
 
-### Commit Messages
+### コミットメッセージ
 
-Use Conventional Commits format:
+Conventional Commits形式を使用：
 
 ```
-feat: add new feature
-fix: resolve bug
-chore: update dependencies
-docs: update documentation
+feat: 新機能を追加
+fix: バグを修正
+chore: 依存関係を更新
+docs: ドキュメントを更新
 ```
 
-### Branch Strategy
+### ブランチ戦略
 
-- Main branch: `main`
-- Development branch: `develop`
-- Create PRs against `develop` branch
+- メインブランチ: `main`
+- 開発ブランチ: `develop`
+- PRは `develop` ブランチに対して作成
 
-### Pull Request Requirements
+### プルリクエスト要件
 
-- Explain the change clearly
-- Link related issues
-- Include screenshots for UI changes
-- Ensure `npm run lint` and `npm run format` pass
-- Document follow-up tasks or technical debt
+- 変更内容を明確に説明
+- 関連するissueをリンク
+- UI変更の場合はスクリーンショットを含める
+- `npm run lint` と `npm run format` が通過することを確認
+- フォローアップタスクや技術的負債を文書化
 
-## Environment Requirements
+## 環境要件
 
-- **Node.js**: 18.18+ or 20.x required for Next.js 15
-- **Package Manager**: pnpm preferred, npm works (align with lockfile you modify)
-- Keep `node_modules` and `.next` out of version control
+- **Node.js**: Next.js 15には18.18+または20.xが必要
+- **パッケージマネージャー**: pnpm推奨、npmも動作（変更するロックファイルに合わせる）
+- `node_modules` と `.next` はバージョン管理の対象外
 
-## Configuration Files
+## 設定ファイル
 
-- `biome.json` - Linting and formatting rules
-- `next.config.ts` - Next.js configuration (currently minimal)
-- `tsconfig.json` - TypeScript compiler options with strict mode
-- `postcss.config.mjs` - Tailwind PostCSS setup
-- `pnpm-workspace.yaml` - Monorepo workspace configuration
+- `biome.json` - リントとフォーマットのルール
+- `next.config.ts` - Next.js設定（現在は最小限）
+- `tsconfig.json` - strict modeのTypeScriptコンパイラオプション
+- `postcss.config.mjs` - Tailwind PostCSS設定
+- `pnpm-workspace.yaml` - モノレポワークスペース設定
 
-## Important Notes
+## 重要な注意事項
 
-- **Turbopack**: Enabled by default for dev and build commands
-- **React 19**: Using latest React version with new features
-- **Biome over Prettier/ESLint**: Project uses Biome for all linting/formatting
-- **No Unknown At-Rules**: Disabled in Biome for Tailwind CSS v4 compatibility
+- **Turbopack**: devとbuildコマンドでデフォルトで有効
+- **React 19**: 新機能を備えた最新のReactバージョンを使用
+- **BiomeをPrettier/ESLintの代わりに使用**: プロジェクトではすべてのlinting/formattingにBiomeを使用
+- **Unknown At-Rulesを無効化**: Tailwind CSS v4互換性のためBiomeで無効化
