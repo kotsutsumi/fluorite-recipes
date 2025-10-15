@@ -2,26 +2,177 @@
 
 `react-dom/server` の API を用いて、サーバ上で React コンポーネントを HTML にレンダーすることができます。これらの API は、アプリケーションの最上位で初期 HTML を生成するために、サーバ上でのみ使用されます。[フレームワーク](/learn/start-a-new-react-project#full-stack-frameworks)はこれらをあなたの代わりに呼び出すことがあります。ほとんどのコンポーネントは、これらをインポートしたり使用したりする必要はありません。
 
+---
+
+## 📋 API クイックリファレンス
+
+### ストリーミング API（推奨）
+
+| API | 環境 | 用途 | Suspense | 詳細リンク |
+|-----|------|------|----------|-----------|
+| `renderToPipeableStream` | Node.js | SSR | ✅ 完全サポート | [詳細](/reference/react-dom/server/renderToPipeableStream) |
+| `renderToReadableStream` | Web Stream | Edge Runtime / Deno | ✅ 完全サポート | [詳細](/reference/react-dom/server/renderToReadableStream) |
+
+### レガシー API（非推奨）
+
+| API | 用途 | Suspense | 詳細リンク |
+|-----|------|----------|-----------|
+| `renderToString` | ハイドレーション可能 HTML | ⚠️ 限定的 | [詳細](/reference/react-dom/server/renderToString) |
+| `renderToStaticMarkup` | 静的 HTML（非インタラクティブ） | ⚠️ 限定的 | [詳細](/reference/react-dom/server/renderToStaticMarkup) |
+
+---
+
 ## Node.js ストリーム用のサーバ API
 
-以下のメソッドは、[Node.js ストリーム](https://nodejs.org/api/stream.html)が利用可能な環境でのみ使用できます：
+### renderToPipeableStream
 
-- [`renderToPipeableStream`](/reference/react-dom/server/renderToPipeableStream) は、React ツリーをパイプ可能な Node.js ストリームにレンダーします。
+**環境**: Node.js ストリーム対応環境
+
+**概要**: React ツリーをパイプ可能な Node.js ストリームにレンダーします。プログレッシブストリーミングとサスペンスを完全サポート。
+
+**主な特徴**:
+- ✅ プログレッシブストリーミング
+- ✅ Suspense の完全サポート
+- ✅ エラーハンドリング（`onShellReady`, `onShellError`, `onError`）
+- ✅ 段階的コンテンツ配信
+- ✅ SEO 対応
+
+**基本的な使用例**:
+
+```javascript
+import { renderToPipeableStream } from 'react-dom/server';
+
+app.use('/', (request, response) => {
+  const { pipe } = renderToPipeableStream(<App />, {
+    bootstrapScripts: ['/main.js'],
+    onShellReady() {
+      response.setHeader('content-type', 'text/html');
+      pipe(response);
+    },
+    onError(error) {
+      console.error(error);
+    }
+  });
+});
+```
+
+**いつ使用するか**:
+- Node.js サーバー（Express、Fastify など）
+- サーバサイドレンダリング（SSR）
+- 大規模アプリケーション
+- プログレッシブローディングが必要な場合
+
+[詳細ドキュメント →](/reference/react-dom/server/renderToPipeableStream)
+
+---
 
 ## Web Stream 用のサーバ API
 
-以下のメソッドは、[Web Stream](https://developer.mozilla.org/docs/Web/API/Streams_API) が利用可能な環境でのみ使用できます。これには、ブラウザ、Deno、および一部のモダンなエッジランタイムが含まれます：
+### renderToReadableStream
 
-- [`renderToReadableStream`](/reference/react-dom/server/renderToReadableStream) は、React ツリーを[読み取り可能な Web Stream](https://developer.mozilla.org/docs/Web/API/ReadableStream) にレンダーします。
+**環境**: Web Stream 対応環境（Deno、Cloudflare Workers、Vercel Edge など）
+
+**概要**: React ツリーを読み取り可能な Web Stream にレンダーします。モダンなエッジランタイムに最適。
+
+**主な特徴**:
+- ✅ Web Stream API 準拠
+- ✅ Suspense の完全サポート
+- ✅ エッジランタイム対応
+- ✅ プログレッシブストリーミング
+- ✅ 非同期データローディング
+
+**基本的な使用例**:
+
+```javascript
+import { renderToReadableStream } from 'react-dom/server';
+
+async function handler(request) {
+  const stream = await renderToReadableStream(<App />, {
+    bootstrapScripts: ['/main.js'],
+    onError(error) {
+      console.error(error);
+    }
+  });
+
+  return new Response(stream, {
+    headers: { 'content-type': 'text/html' },
+  });
+}
+```
+
+**いつ使用するか**:
+- Deno 環境
+- Cloudflare Workers
+- Vercel Edge Functions
+- Web Stream をサポートするモダンエッジランタイム
+
+[詳細ドキュメント →](/reference/react-dom/server/renderToReadableStream)
+
+---
 
 ## 非ストリーム環境向けのレガシーサーバ API
 
-以下のメソッドは、ストリームをサポートしない環境で使用できます：
+### renderToString（レガシー）
 
-- [`renderToString`](/reference/react-dom/server/renderToString) は、React ツリーを文字列にレンダーします。（レガシー）
-- [`renderToStaticMarkup`](/reference/react-dom/server/renderToStaticMarkup) は、非インタラクティブな React ツリーを文字列にレンダーします。（レガシー）
+**概要**: React ツリーを HTML 文字列にレンダーします。ハイドレーション可能ですが、ストリーミングはサポートしません。
 
-ストリーミングの機能は制限されているため、これらは機能的に限定的です。
+**主な特徴**:
+- ⚠️ Suspense の限定的サポート
+- ⚠️ ストリーミングなし
+- ✅ ハイドレーション可能
+- ⚠️ ブロッキング動作
+
+**基本的な使用例**:
+
+```javascript
+import { renderToString } from 'react-dom/server';
+
+app.use('/', (request, response) => {
+  const html = renderToString(<App />);
+  response.send(html);
+});
+```
+
+**いつ使用するか**:
+- レガシーコードのメンテナンス
+- シンプルな SSR セットアップ
+- ストリーミングが不要な小規模アプリ
+
+⚠️ **注意**: 新しいプロジェクトでは `renderToPipeableStream` または `renderToReadableStream` の使用を推奨します。
+
+[詳細ドキュメント →](/reference/react-dom/server/renderToString)
+
+---
+
+### renderToStaticMarkup（レガシー）
+
+**概要**: React ツリーを静的な HTML 文字列にレンダーします。ハイドレーション不可、React 固有の属性を含みません。
+
+**主な特徴**:
+- ❌ ハイドレーション不可
+- ❌ インタラクティブ性なし
+- ✅ 小さい HTML サイズ
+- ✅ 完全に静的なコンテンツに最適
+
+**基本的な使用例**:
+
+```javascript
+import { renderToStaticMarkup } from 'react-dom/server';
+
+const html = renderToStaticMarkup(<EmailTemplate />);
+sendEmail({ html });
+```
+
+**いつ使用するか**:
+- 電子メールテンプレート
+- PDF レポート生成
+- RSS フィード
+- OG 画像生成
+- 完全に静的なコンテンツ
+
+[詳細ドキュメント →](/reference/react-dom/server/renderToStaticMarkup)
+
+---
 
 ## サーバ用 API の使用方法
 

@@ -2,17 +2,50 @@
 
 `react-dom` パッケージには、ブラウザ DOM 環境で実行されるウェブアプリケーション専用のフックが含まれています。
 
-## 注意
+---
 
-これらのフックは iOS、Android、Windows アプリケーションなど非ブラウザ環境ではサポートされていません。
+## ⚠️ 重要な注意事項
+
+これらのフックは**ブラウザ DOM 環境専用**です。以下の環境ではサポートされていません：
+- iOS アプリケーション
+- Android アプリケーション
+- Windows デスクトップアプリケーション
+- その他の非ブラウザ環境
+
+---
+
+## 📋 利用可能なフック一覧
+
+| フック | 用途 | 主な機能 | 詳細リンク |
+|--------|------|----------|-----------|
+| `useFormStatus` | フォーム送信状態の追跡 | pending、data、method、action の取得 | [詳細](/reference/react-dom/hooks/useFormStatus) |
+
+---
 
 ## フォーム関連フック
 
-フォームを使用して、情報を送信するためのインタラクティブなコントロールを作成できます。
+### useFormStatus
 
-### `useFormStatus`
+**概要**: フォームの送信ステータスに基づいて UI を動的に更新できるフックです。
 
-フォームのステータスに基づいて UI を更新できます。
+**主な用途**:
+- ✅ フォーム送信中の UI 無効化
+- ✅ ローディングインジケータの表示
+- ✅ 送信データへのアクセス
+- ✅ 送信メソッド（GET/POST）の確認
+
+**返り値**:
+
+```typescript
+{
+  pending: boolean;    // フォームが送信中かどうか
+  data: FormData | null;    // 送信中のフォームデータ
+  method: 'get' | 'post';   // HTTP メソッド
+  action: Function | null;  // フォームアクション関数
+}
+```
+
+**基本的な使用例**:
 
 ```javascript
 import { useFormStatus } from 'react-dom';
@@ -43,6 +76,44 @@ function SubmitButton() {
   );
 }
 ```
+
+**重要な制約**:
+
+1. **フォームの子コンポーネント内で呼び出す必要がある**
+
+```javascript
+// ✅ 正しい: フォームの子コンポーネント内
+function SubmitButton() {
+  const { pending } = useFormStatus();
+  return <button disabled={pending}>Submit</button>;
+}
+
+function MyForm() {
+  return (
+    <form>
+      <SubmitButton />
+    </form>
+  );
+}
+
+// ❌ 間違い: フォームと同じコンポーネント内
+function MyForm() {
+  const { pending } = useFormStatus(); // これは動作しない
+  return (
+    <form>
+      <button disabled={pending}>Submit</button>
+    </form>
+  );
+}
+```
+
+2. **親フォームのステータスのみを返す**
+
+同じコンポーネント内の `<form>` や子の `<form>` のステータスは追跡しません。最も近い親 `<form>` のステータスのみを返します。
+
+[詳細ドキュメント →](/reference/react-dom/hooks/useFormStatus)
+
+---
 
 ## 主な用途
 
