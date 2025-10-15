@@ -19,7 +19,7 @@ pnpm approve-builds better-sqlite3
 
 ```bash
 pnpm run index build \
-  --pack nextjs.core \
+  --pack fluorite-recipes \
   --root ../.. \
   --source-base "https://github.com/kotsutsumi/fluorite-recipes/blob/{commit}/" \
   --commit $(git rev-parse HEAD)
@@ -68,12 +68,12 @@ Rust 側では `chunks` を JOIN して本文、`metadata` でソース情報、
 
 1. Markdown の差分を確認しつつパックを再生成
    ```bash
-   pnpm run index build --pack nextjs.core --root ../.. --commit $(git rev-parse HEAD)
+   pnpm run index build --pack fluorite-recipes --root ../.. --commit $(git rev-parse HEAD)
    ```
 2. 生成物を別リポジトリ／Rust プロジェクトへコピー
    ```bash
-   cp ../../packs/nextjs.core@2025-10-12.sqlite /path/to/rust-project/data/
-   cp ../../packs/nextjs.core@2025-10-12.sqlite.manifest.json /path/to/rust-project/data/
+   cp ../../packs/fluorite-recipes@2025-10-12.sqlite /path/to/rust-project/data/
+   cp ../../packs/fluorite-recipes@2025-10-12.sqlite.manifest.json /path/to/rust-project/data/
    ```
 3. Rust 側で SQLite を読み込み、BM25 とベクター（annoy/hnsw/quantization等）を再インデックス、あるいは直接 SQLite-VSS 拡張を利用。
 
@@ -97,7 +97,7 @@ pnpm typecheck
 ```rust
 use rusqlite::{Connection, params};
 
-let conn = Connection::open("data/nextjs.core@2025-10-12.sqlite")?;
+let conn = Connection::open("data/fluorite-recipes@2025-10-12.sqlite")?;
 let mut stmt = conn.prepare("SELECT c.text, m.source_url FROM chunks c JOIN metadata m ON c.id = m.id WHERE m.file = ?1")?;
 let rows = stmt.query_map(params!["docs/indexing.md"], |row| {
     Ok((row.get::<_, String>(0)?, row.get::<_, Option<String>>(1)?))
