@@ -1,3 +1,5 @@
-# Data Migration
+# データマイグレーション
 
-詳細については、[公式ドキュメント](https://www.prisma.io/docs/orm/prisma-migrate/workflows/data-migration)を参照してください。
+> このガイドは新しい[ガイドセクション](/docs/guides/data-migration)に移動されました。ガイドはそこで見つけることができます。
+
+完全なデータマイグレーションガイドについては、新しい場所のドキュメントを参照してください。
