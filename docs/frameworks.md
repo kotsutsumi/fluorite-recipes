@@ -290,25 +290,25 @@ Tauriは、Rust + Web技術でクロスプラットフォームデスクトッ�
 - **Expo**: 最新安定版に基づく
 - **Tauri**: ドキュメント準備中
 
-## 📦 Fluorite Recipesでの使用例
+## 📦 推奨される技術スタック組み合わせ
 
-### プロジェクト構成
-```
-apps/
-├── nextjs/base/        # Next.js 15 Webアプリ（フルスタック）
-│   ├── src/app/        # App Router ページ・レイアウト
-│   └── public/         # 静的アセット
-├── expo/base/          # Expo モバイルアプリ（iOS/Android/Web）
-│   ├── app/            # Expo Router 画面・ナビゲーション
-│   └── components/     # 共有UIコンポーネント
-```
+### Webアプリケーション
+- **フレームワーク**: Next.js 15（SSR/SSG/ISR + Server Components）
+- **UI基盤**: React 19
+- **スタイリング**: Tailwind CSS（[ライブラリドキュメント](../libs.md)参照）
+- **状態管理**: Zustand/Jotai（[ライブラリドキュメント](../libs.md)参照）
+- **データベース**: Drizzle ORM/Prisma（[ライブラリドキュメント](../libs.md)参照）
 
-### 推奨される組み合わせ
-- **Web層**: Next.js（SSR/SSG/ISR + Server Components）
-- **モバイル層**: Expo（クロスプラットフォーム + EAS）
-- **UI基盤**: React 19（共通コンポーネント）
-- **状態管理**: Zustand/Jotai（ライブラリドキュメント参照）
-- **スタイリング**: Tailwind CSS（ライブラリドキュメント参照）
+### モバイルアプリケーション
+- **フレームワーク**: Expo（クロスプラットフォーム + EAS）
+- **UI基盤**: React Native + React 19概念
+- **ルーティング**: Expo Router
+- **状態管理**: Zustand/Jotai
+
+### デスクトップアプリケーション
+- **フレームワーク**: Tauri
+- **UI層**: React + Tailwind CSS
+- **バックエンド**: Rust
 
 ## 🎓 学習リソース
 
