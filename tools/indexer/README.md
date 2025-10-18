@@ -1,111 +1,101 @@
-# Fluorite Indexer
+# Fluorite Indexer (Tika Edition)
 
-`tools/indexer` はフルオライト・レシピの Markdown ドキュメントを取り込み、ローカル LLM で利用できるハイブリッド検索用パック（SQLite + FTS + ベクター）を生成するための TypeScript 製ユーティリティです。生成されたパックは `packs/` ディレクトリに保存され、別プロジェクト（例: Rust 製の対話エージェント）から読み込んで検索に利用できます。
+TypeScript-based CLI that extracts rich documents through Apache Tika, normalises and chunks the text, and writes a hybrid BM25 + vector pack into a single SQLite file under `packs/`. The implementation follows the workflow described in `fluorite_indexer_tika_prompt.md` and `fluorite-indexer-tika.md`.
 
-## セットアップ
+## Prerequisites
+
+- Node.js 20+
+- pnpm 9+
+- Java 11+ (Apache Tika Server 3.2.3 推奨)
+- `better-sqlite3` native build permissions (`pnpm approve-builds better-sqlite3` when prompted)
+
+Install dependencies once:
 
 ```bash
 cd tools/indexer
 pnpm install
-# better-sqlite3 のビルドを許可する場合
-pnpm approve-builds better-sqlite3
 ```
 
-> **Note:** `pnpm` v10 以降ではネイティブ依存のビルドがデフォルトで無効化されています。パック生成を行う際は `pnpm approve-builds better-sqlite3` でビルドを許可してください。
-
-## 使い方
-
-### パックの生成
+Launch Tika separately, for example:
 
 ```bash
-pnpm run index build \
-  --pack fluorite-recipes \
-  --root ../.. \
-  --source-base "https://github.com/kotsutsumi/fluorite-recipes/blob/{commit}/" \
-  --commit $(git rev-parse HEAD)
+java -jar tika-server-standard-3.2.3.jar -p 9998
 ```
 
-主なオプション:
+## Index a file
 
-- `--pack <name>`: 論理パック名（必須）。ファイル名は `<pack>@<tag>.sqlite` になります。
-- `--tag <tag>`: ファイル名につくタグ。デフォルトは実行日の `YYYY-MM-DD`。
-- `--root <dir>`: 取り込み対象のプロジェクトルート。
-- `--include <pattern>` / `--exclude <pattern>`: Markdown の include / exclude グロブ（複数指定可）。
-- `--out <dir>`: 出力ディレクトリ（ルート相対）。既定は `packs/`。
-- `--source-base <url>`: 出典 URL のベース。`{commit}`/`{ref}` プレースホルダーが利用できます。
-- `--commit <sha>`: 出典用のコミットハッシュ。指定しない場合は `git rev-parse HEAD` を試行します。
-- `--embedding-endpoint <url>`: ベクター埋め込みサービスの HTTP エンドポイント。省略時は環境変数 `FLUORITE_EMBEDDING_ENDPOINT` を参照します。
-- `--skip-embeddings`: ベクター埋め込みをスキップ（SQLite には BM25 のみ格納）。
-- `--dry-run`: 対象ファイルとチャンク数を表示し、ファイルを書き出しません。
+```bash
+pnpm tsx tools/indexer/index.ts ./fixtures/sample.pdf
+```
 
-### 環境変数
+Key flags:
 
-| 変数 | 説明 |
+- `--tika-url <url>` – override the base URL (default `http://localhost:9998`).
+- `--pack-path <file>` – absolute or relative path for the output SQLite pack (`packs/fluorite-pack.sqlite3` by default).
+- `--pack-dir <dir>` / `--pack-name <name>` – alternative way to point to the pack destination.
+- `--root <dir>` – project root used to compute `docs.repo_path` (defaults to `process.cwd()`).
+- `--chunk-target <tokens>` and `--chunk-overlap <tokens>` – chunk length & overlap (defaults 800 / 120).
+- `--embed-dim <dim>` – embedding vector size written into `chunk_embeddings` (default 384; placeholder zero vectors for now).
+- `--source-base <url>` – optional prefix to create `docs.source_url`.
+- `--skip-ping` – skip the Tika `/version` health check at startup.
+
+Any option can also be provided via environment variables:
+
+| Variable | Description |
 | --- | --- |
-| `FLUORITE_SOURCE_BASE` | `--source-base` のデフォルト。`{commit}`/`{ref}` プレースホルダー可。 |
-| `FLUORITE_EMBEDDING_ENDPOINT` | 埋め込み API の URL。 |
-| `FLUORITE_EMBEDDING_MODEL` | API に渡す model 名。 |
-| `FLUORITE_EMBEDDING_KEY` | API 認証トークン（Bearer）。 |
-| `FLUORITE_EMBEDDING_DIM` | 期待するベクトル次元。 |
-| `FLUORITE_EMBEDDING_BATCH` | バッチサイズ（数値）。 |
+| `FLUORITE_TIKA_URL` | Default Tika endpoint. |
+| `FLUORITE_TIKA_TIMEOUT` | Timeout in milliseconds (default 60000). |
+| `FLUORITE_PACK_PATH` / `FLUORITE_PACK_DIR` / `FLUORITE_PACK_NAME` | Pack destination overrides. |
+| `FLUORITE_ROOT_DIR` | Root used for relative repo paths. |
+| `FLUORITE_CHUNK_TOKENS` / `FLUORITE_CHUNK_OVERLAP` | Chunk sizing hints. |
+| `FLUORITE_EMBED_DIM` | Embedding vector dimension. |
 
-### 出力アーティファクト
+## Batch build (docs + userdata)
 
-`packs/<pack>@<tag>.sqlite`
-: 以下のテーブルを含む SQLite データベース。
+`docs/` 配下を全スキャンし、`userdata/` 以下の PDF / Office / 画像をまとめて取り込むバッチ処理も用意しています。
 
-- `chunks(id TEXT PRIMARY KEY, document_id TEXT, ordinal INTEGER, text TEXT, token_count INTEGER)`
-- `metadata(id TEXT PRIMARY KEY, file TEXT, source_url TEXT, heading TEXT, heading_level INTEGER, anchors TEXT, primary_anchor TEXT, product TEXT, area TEXT, version TEXT, lang TEXT, front_matter TEXT)`
-- `bm25` (FTS5 仮想テーブル)。`text` カラムで全文検索可能。
-- `embeddings(id TEXT PRIMARY KEY, vector BLOB, dimension INTEGER)` — `vector` は little-endian Float32 配列。
+```bash
+# 予め Apache Tika Server 3.2.3 を起動しておく
+tools/indexer/scripts/build-pack.sh
+```
 
-Rust 側では `chunks` を JOIN して本文、`metadata` でソース情報、`embeddings` をデシリアライズしてベクター検索に利用できます。
+- 既存の `packs/fluorite-pack.sqlite3` は初期化され、すべての成果が単一ファイルにまとまります。
+- Tika JAR が存在しなければ `archive.apache.org` から `tika-server-standard-3.2.3.jar` を自動ダウンロードします。任意のパスを使いたい場合は `FLUORITE_TIKA_JAR`、バージョンや配布 URL を変えたい場合は `FLUORITE_TIKA_VERSION` / `FLUORITE_TIKA_JAR_URL` を設定してください（`tools/indexer/tika-server*.jar` が存在すればそれも検出します）。
+- 実行前にポートが塞がっていても `lsof -ti:<port> | xargs kill` で解放してから Tika を起動するため、手動操作は要りません。
+- `FLUORITE_TIKA_URL` / `FLUORITE_PACK_NAME` / `FLUORITE_PACK_DIR` といった環境変数で接続先やファイル名を上書きできます。
+- さらに細かい制御が必要になったら `pnpm tsx tools/indexer/batch.ts --help` で CLI オプションを確認し、シェルスクリプトに追加の引数を渡してください。
 
-`packs/<pack>@<tag>.sqlite.manifest.json`
-: 生成メタデータ。対象ファイル、チャンク数、トークン推定値、埋め込み情報などが含まれます。
+## SQLite schema
 
-### CLI のサンプルワークフロー
+`tools/indexer` initialises one SQLite database containing:
 
-1. Markdown の差分を確認しつつパックを再生成
-   ```bash
-   pnpm run index build --pack fluorite-recipes --root ../.. --commit $(git rev-parse HEAD)
-   ```
-2. 生成物を別リポジトリ／Rust プロジェクトへコピー
-   ```bash
-   cp ../../packs/fluorite-recipes@2025-10-12.sqlite /path/to/rust-project/data/
-   cp ../../packs/fluorite-recipes@2025-10-12.sqlite.manifest.json /path/to/rust-project/data/
-   ```
-3. Rust 側で SQLite を読み込み、BM25 とベクター（annoy/hnsw/quantization等）を再インデックス、あるいは直接 SQLite-VSS 拡張を利用。
+- `docs(id INTEGER PRIMARY KEY, source_url TEXT, repo_path TEXT, title TEXT, lang TEXT, mime TEXT, version TEXT, docset TEXT, published_at TEXT, fetched_at TEXT NOT NULL, hash TEXT NOT NULL UNIQUE)`
+- `chunks(id INTEGER PRIMARY KEY, doc_id INTEGER NOT NULL REFERENCES docs(id) ON DELETE CASCADE, ord INTEGER NOT NULL, text TEXT NOT NULL, code TEXT, heading_path TEXT, page_no INTEGER, tokens INTEGER, UNIQUE(doc_id, ord))`
+- `chunks_fts` (FTS5 virtual table linked to `chunks.id` for BM25 ranking)
+- `chunk_embeddings(rowid INTEGER PRIMARY KEY, embedding BLOB)` storing little-endian Float32 vectors
 
-## コード構成
+Each run is idempotent per document hash: existing chunk rows are replaced, embeddings refreshed, and FTS kept in sync.
 
-- `src/chunker.ts`: Markdown を h2/h3 単位でチャンク化。
-- `src/ingest.ts`: ファイル探索とフロントマター処理。
-- `src/embed.ts`: HTTP 経由で埋め込みをバッチ取得（OpenAI 互換レスポンス対応）。
-- `src/pack.ts`: SQLite にチャンク/メタ/ベクトル/FTS を書き込み。
-- `src/manifest.ts`: 生成メタデータを JSON 化。
-- `src/cli.ts`: Commander ベースの CLI エントリポイント。
+## Module overview
 
-## Lint / Type Check
+- `src/config.ts` – resolves CLI/environment configuration.
+- `src/tika-client.ts` – minimal REST client with timeout handling and health check.
+- `src/normalize.ts` – whitespace & control-character cleanup of Tika output.
+- `src/chunker.ts` – token-approximate chunking with 10–15% overlap.
+- `src/embedder.ts` – placeholder zero-vector generator (swap in a real model later).
+- `src/sqlite-writer.ts` – schema initialisation and transactional upsert for docs/chunks/embeddings.
+- `src/indexer.ts` – orchestration pipeline for a single file。
+- `src/batch.ts` – `docs/` と `userdata/` を走査して順次インデックスするバッチ実装。
+- `index.ts` – 単一ファイルを取り込む CLI エントリポイント。
+- `batch.ts` – バッチ処理用 CLI エントリポイント。
+- `scripts/build-pack.sh` – 1 コマンドでバッチを実行するためのヘルパースクリプト。
+
+## Development
+
+Type-check the project:
 
 ```bash
 pnpm typecheck
 ```
 
-## Rust プロジェクトでの利用例
-
-```rust
-use rusqlite::{Connection, params};
-
-let conn = Connection::open("data/fluorite-recipes@2025-10-12.sqlite")?;
-let mut stmt = conn.prepare("SELECT c.text, m.source_url FROM chunks c JOIN metadata m ON c.id = m.id WHERE m.file = ?1")?;
-let rows = stmt.query_map(params!["docs/indexing.md"], |row| {
-    Ok((row.get::<_, String>(0)?, row.get::<_, Option<String>>(1)?))
-})?;
-```
-
-ベクター列は `BLOB` に格納されているため、`bytemuck` や `byteorder` で `Vec<f32>` に復元してローカル ANN 検索器へ渡せます。
-
----
-
-同梱されていない機能（例: 差分ビルド、マニフェスト署名、追加ストレージ転送など）はニーズに応じて拡張してください。
+Future work items are tracked in the integration guides; notably real embedding backends, differential updates across directories, and E2E tests once Vitest is introduced.

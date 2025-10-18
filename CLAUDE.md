@@ -1,256 +1,307 @@
 # CLAUDE.md
 
-このファイルは、このリポジトリのコードで作業する際にClaude Code (claude.ai/code) にガイダンスを提供します。
+このファイルは、このリポジトリで作業する際にClaude Code (claude.ai/code) にガイダンスを提供します。
 
 ## プロジェクト概要
 
-Fluorite Recipesは、Webとモバイルアプリケーションのためのモノレポです。Next.js 15（Web）とExpo（モバイル）の2つのアプリがあり、TypeScript 5（strict mode）、最新のReact、モダンなツールチェーンを使用しています。
+Fluorite Recipesは、モダンなWeb・モバイル開発フレームワークとライブラリの包括的な日本語ドキュメント集です。LLM（大規模言語モデル）と開発者の両方が効率的に参照できるよう、構造化されたドキュメントインデックスを提供しています。
 
-## 重要: 作業ディレクトリ
+## プロジェクトの目的
 
-**開発コマンドは各アプリのディレクトリから実行する必要があります。リポジトリルートからは実行しないでください。**
+- **ドキュメント収集**: 最新のフレームワーク・ライブラリの日本語ドキュメントを収集
+- **構造化**: LLMが効率的に解析できる形式（TypeScriptインターフェース形式など）で整理
+- **インデックス生成**: `tools/indexer` を使用してドキュメントインデックスを生成
+- **学習支援**: 開発者が段階的に学習できるパスを提供
 
-```bash
-# Next.js Webアプリ
-cd apps/nextjs/base
-
-# Expo モバイルアプリ
-cd apps/expo/base
-```
-
-## 開発コマンド
-
-### Next.js Webアプリ（`apps/nextjs/base`）
-
-```bash
-# 開発サーバー起動（Turbopack有効） - http://localhost:3000
-pnpm dev
-# または: npm run dev
-
-# 本番ビルド
-pnpm build
-
-# 本番サーバー起動
-pnpm start
-
-# リント
-pnpm lint
-
-# 自動フォーマット
-pnpm format
-```
-
-### Expo モバイルアプリ（`apps/expo/base`）
-
-```bash
-# 開発サーバー起動
-pnpm start
-
-# iOS シミュレーター
-pnpm ios
-
-# Android エミュレーター
-pnpm android
-
-# Web ブラウザ
-pnpm web
-
-# リント
-pnpm lint
-```
-
-## アーキテクチャ
-
-### モノレポ構造
+## プロジェクト構造
 
 ```
-apps/
-├── nextjs/base/    # Next.js 15 App Router Webアプリ
-│   ├── src/app/    # ページとレイアウト
-│   ├── public/     # 静的アセット
-│   └── biome.json  # Biome設定
-└── expo/base/      # Expo Router モバイルアプリ
-    ├── app/        # 画面とナビゲーション
-    ├── components/ # 共有UIコンポーネント
-    ├── hooks/      # カスタムフック
-    └── assets/     # 画像とアイコン
+fluorite-recipes/
+├── docs/                    # メインコンテンツ
+│   ├── frameworks.md        # フレームワーク一覧・選択ガイド
+│   ├── libs.md              # ライブラリ一覧・選択ガイド
+│   ├── frameworks/          # フレームワーク別ドキュメント
+│   │   ├── nextjs/          # Next.js (310ファイル)
+│   │   ├── react/           # React (142ファイル)
+│   │   ├── expo/            # Expo (398ファイル)
+│   │   └── tauri/           # Tauri (準備中)
+│   └── libs/                # ライブラリ別ドキュメント
+│       ├── tailwindcss/     # Tailwind CSS (169ファイル)
+│       ├── shadcn/          # shadcn/ui
+│       ├── kibo-ui/         # Kibo UI
+│       ├── drizzle/         # Drizzle ORM
+│       ├── prisma/          # Prisma
+│       ├── zustand/         # Zustand
+│       ├── jotai/           # Jotai
+│       ├── valtio/          # Valtio
+│       └── turborepo/       # Turborepo
+├── tools/                   # ドキュメント管理ツール
+│   └── indexer/             # インデックス生成ツール
+└── packs/                   # パッケージ管理
 ```
 
-### Next.js App Router構造
+## ドキュメント作成・編集ガイドライン
 
-- **`src/app/page.tsx`**: ホームページ（エントリーポイント）
-- **`src/app/layout.tsx`**: Geistフォントとグローバルスタイルを含むルートレイアウト
-- **`src/app/globals.css`**: TailwindのインポートとCSS変数、テーマトークン
-- **`public/`**: 静的アセット（SVG、画像）
+### ドキュメント構造の原則
 
-### Expo Router構造
+1. **階層的な情報設計**
+   - マスタードキュメント → カテゴリ別ドキュメント → 詳細ドキュメント
+   - 例: `frameworks.md` → `nextjs.md` → `nextjs/learn.md` → 個別章
 
-- **`app/`**: 画面とタブナビゲーション
-- **`components/`**: 再利用可能なUIコンポーネント
-- **`hooks/`**: カスタムReactフック
-- **`assets/`**: デバイス固有のアセット
+2. **LLM最適化**
+   - TypeScriptインターフェース形式での情報提示
+   - 構造化されたクイックリファレンステーブル
+   - 明確なセクション分割とリンク
 
-### 主要なパターン
+3. **段階的詳細度**
+   - 概要 → 主要機能 → 詳細仕様 → コード例
+   - 初心者 → 中級者 → 上級者向けの学習パス
 
-#### Next.js（Web）
+### ドキュメントフォーマット
 
-1. **サーバーコンポーネント優先**: デフォルトでReactサーバーコンポーネントを使用。クライアント側のインタラクティビティが必要な場合のみ `"use client"` を追加。
+#### マークダウン基本構造
 
-2. **真実の情報源としてのCSS変数**: すべての色とフォントは `globals.css` でCSS変数を使用して定義：
-   ```css
-   :root {
-     --background: #ffffff;
-     --foreground: #171717;
-   }
-   ```
+```markdown
+# [技術名] - [カテゴリ]
 
-3. **Tailwind CSS v4 の @theme inline**: 新しい `@theme inline` ディレクティブを使用したテーマトークン定義：
-   ```css
-   @theme inline {
-     --color-background: var(--background);
-     --font-sans: var(--font-geist-sans);
-   }
-   ```
+[概要説明]
 
-4. **フォント読み込みパターン**: `next/font/google` 経由でフォントを読み込み、CSS変数として公開：
-   ```typescript
-   const geistSans = Geist({
-     variable: "--font-geist-sans",
-     subsets: ["latin"],
-   });
-   ```
+## 📚 目次
 
-#### Expo（モバイル）
+## クイックリファレンス
 
-1. **Expo Router**: ファイルベースルーティング（`app/` ディレクトリ構造）
-2. **説明的な命名**: フックとコンポーネントには明確な名前を使用（`useRecipeFilters`、`RecipeCard`）
-3. **クロスプラットフォーム**: iOS、Android、Webで動作するコードを記述
+| 項目 | 説明 |
+|-----|------|
 
-### パスエイリアス
+## 基本的な使い方
 
-**Next.js**: TypeScriptは `@/*` エイリアスを `apps/nextjs/base/src/*` にマッピング：
+### [トピック]
+
+[説明]
+
+```[言語]
+[コード例]
+```
+
+## 詳細ドキュメント
+
+### [セクション]
 
 ```typescript
-import Component from "@/components/Component";
+interface [名前] {
+  [プロパティ]: {
+    [説明];
+  };
+}
 ```
 
-**Expo**: 設定に応じてエイリアスを使用
+## 学習パス
+
+### [レベル]
+
+## 関連リンク
+```
+
+### TypeScriptインターフェース形式の活用
+
+LLMが効率的に情報を解析できるよう、構造化された情報はTypeScriptインターフェース形式で表現：
+
+```typescript
+interface FrameworkOverview {
+  name: string;
+  version: string;
+  documentation: {
+    total: number;
+    categories: string[];
+  };
+  features: {
+    core: string[];
+    advanced: string[];
+  };
+  learningPath: {
+    beginner: string;
+    intermediate: string;
+    advanced: string;
+  };
+}
+```
+
+## ドキュメント追加のワークフロー
+
+### 新規フレームワーク・ライブラリの追加
+
+1. **ディレクトリ作成**
+   ```bash
+   # フレームワークの場合
+   mkdir -p docs/frameworks/[framework-name]/docs
+
+   # ライブラリの場合
+   mkdir -p docs/libs/[library-name]/docs
+   ```
+
+2. **マスタードキュメント作成**
+   - `docs/frameworks/[framework-name].md` または
+   - `docs/libs/[library-name].md`
+
+3. **詳細ドキュメント追加**
+   - サブディレクトリに詳細ドキュメントを配置
+   - 章別、機能別に整理
+
+4. **インデックス更新**
+   - `docs/frameworks.md` または `docs/libs.md` に追加
+   - 統計情報、リンク、説明を更新
+
+### ドキュメント品質チェック
+
+- [ ] マークダウンの文法エラーがない
+- [ ] 内部リンクが正しく機能する
+- [ ] コード例が動作可能である
+- [ ] TypeScriptインターフェース形式が適切に使用されている
+- [ ] 段階的な学習パスが提供されている
+- [ ] クロスリファレンスが適切に設定されている
 
 ## コーディング規約
 
-### TypeScript
+### マークダウン
 
-- Strict mode有効（`strict: true`）
-- ターゲット: ES2017
-- 型付きReact関数コンポーネントを使用
-- 公開APIには推論よりも明示的な型を優先
+- **見出し**: 明確で簡潔に（日本語または英語）
+- **リスト**: 箇条書きは `-` を使用
+- **強調**: 重要な用語は `**太字**`
+- **コードブロック**: 言語指定を必ず付ける
+- **リンク**: 相対パスを使用（ドキュメント内）
 
-### スタイリングガイドライン
+### ファイル・ディレクトリ命名
 
-#### Next.js（Web）
-- **ユーティリティ順序**: layout → spacing → typography
-- **ダークモード**: `prefers-color-scheme` メディアクエリで処理
-- **トークンソース**: `globals.css` のCSS変数が唯一の真実の情報源
+- **ディレクトリ**: 小文字、ハイフン区切り（例: `nextjs`, `tailwindcss`）
+- **ファイル**: 小文字、ハイフン区切り（例: `getting-started.md`, `api-reference.md`）
+- **マスタードキュメント**: フレームワーク名/ライブラリ名と同じ（例: `nextjs.md`, `react.md`）
 
-#### Expo（モバイル）
-- StyleSheetまたはTailwind CSS for React Native
-- プラットフォーム固有のスタイリングは `Platform.select()` を使用
-
-### リントとフォーマット
-
-#### Next.js（Web）
-- **ツール**: Biome 2.2.0（ESLint/Prettierではない）
-- **インデント**: 2スペース
-- **インポート整理**: `organizeImports` で自動化
-- **設定**: Next.jsとReactドメインを有効にした `biome.json`
-- **コミット前**: 常に `pnpm format` を実行
-
-#### Expo（モバイル）
-- **ツール**: `eslint-config-expo`
-- コミット前にリンターを実行
-
-### ファイル構成
-
-#### Next.js
-- 関連コンポーネントは `src/app` 内の機能フォルダに配置
-- コンポーネントには `.tsx`、ユーティリティには `.ts` を使用
-- 将来のテスト: `*.test.tsx` をコンポーネントの隣または `__tests__/` に配置
-
-#### Expo
-- 画面は `app/` に配置
-- 共有コンポーネントは `components/` に配置
-- フックは `hooks/` に配置
-- テストはファイルの隣に配置
-
-## テスト
-
-**現状**: テストインフラストラクチャはまだ設定されていません。
-
-**将来の戦略**（テスト追加時）：
-- **フレームワーク**: Vitest + React Testing Library
-- **スクリプト**: package.jsonに `npm run test` を追加
-- **配置場所**: コンポーネントの隣に `*.test.tsx` を配置、または `__tests__/` に配置
-- **カバレッジ目標**: 新規コードで80%以上
-- **統合テスト**: ルーティングと非同期フローのテスト（Next.jsルート変更、Expoタブスタック）
-
-## Gitワークフロー
+## Git ワークフロー
 
 ### コミットメッセージ（Conventional Commits）
 
 ```
-feat: 新機能を追加
-fix: バグを修正
-chore: 依存関係を更新
-docs: ドキュメントを更新
+docs: 新しいフレームワークのドキュメントを追加
+docs: Tailwind CSS のAPIリファレンスを更新
+docs: Next.js 学習パスを改善
+fix: リンク切れを修正
+chore: ドキュメント構造を整理
 ```
 
 ### ブランチ戦略
 
 - **メインブランチ**: `main`
 - **開発ブランチ**: `develop`
-- **PR**: `develop` ブランチに対して作成
+- **ドキュメント追加**: `docs/[feature-name]`
+- **修正**: `fix/[issue-description]`
 
-### PR要件
+## ツール使用ガイド
 
-- 変更内容の明確な説明
-- 関連するissueをリンク
-- UI変更の場合はスクリーンショットまたは録画を含める
-- `pnpm lint` と `pnpm format` が通過することを確認
-- フォローアップタスクや技術的負債を文書化
+### ドキュメントインデックス生成
 
-## 環境要件
+```bash
+cd tools/indexer
+# インデックス生成スクリプトを実行
+# （詳細はtools/indexer/README.mdを参照）
+```
 
-- **Node.js**: 18.18+または20.x（Next.js 15に必要）
-- **パッケージマネージャー**: pnpm推奨（ロックファイル: `pnpm-lock.yaml`）
-- **Git Ignore**: `node_modules/`、`.next/`、`node_modules/`、ビルド成果物
+### ドキュメント検証
 
-## 設定ファイル
+```bash
+# リンク切れチェック（将来実装予定）
+# npm run check-links
 
-### Next.js（`apps/nextjs/base/`）
-- **`biome.json`**: リントとフォーマットルール、Next.js/Reactドメイン
-- **`next.config.ts`**: Next.js設定（現在は最小限）
-- **`tsconfig.json`**: TypeScript strict mode、パスエイリアス
-- **`postcss.config.mjs`**: Tailwind PostCSS設定
-- **`pnpm-workspace.yaml`**: モノレポワークスペース定義
+# マークダウンリント（将来実装予定）
+# npm run lint-docs
+```
 
-### Expo（`apps/expo/base/`）
-- **`app.json`**: Expo設定
-- **`tsconfig.json`**: TypeScript設定
-- **`metro.config.js`**: Metro bundler設定
+## ベストプラクティス
 
-## 重要な注意事項
+### ドキュメント作成時
 
-### Next.js（Web）
-- **Turbopack**: devとbuildコマンドでデフォルトで有効（`--turbopack` フラグ）
-- **React 19**: 新機能とパターンを備えた最新バージョンを使用
-- **BiomeをESLint/Prettierの代わりに使用**: すべてのコード品質ツールをBiomeに統合
-- **Unknown At-Rulesを無効化**: Tailwind CSS v4互換性のためBiome設定で無効化
+1. **公式ドキュメントを参照**: 正確な情報源から情報を取得
+2. **バージョン明記**: ドキュメント対象のバージョンを明記
+3. **実践的な例**: 動作するコード例を提供
+4. **学習者視点**: 初心者から上級者まで段階的に理解できる構成
+5. **LLM視点**: 構造化された情報、明確なセクション分割
 
-### Expo（モバイル）
-- **Expo Router**: ファイルベースルーティングシステム
-- **クロスプラットフォーム**: iOS、Android、Web対応
-- **eslint-config-expo**: Expo推奨のESLint設定を使用
+### ドキュメント更新時
 
-## 追加コンテキスト
+1. **変更履歴**: 重要な更新は変更履歴を記録
+2. **リンク検証**: 関連ドキュメントのリンクを確認
+3. **一貫性**: 既存のドキュメント構造・スタイルに準拠
+4. **クロスリファレンス**: 関連ドキュメントへのリンクを追加
 
-詳細なリポジトリガイドラインについては `AGENTS.md` を参照してください。
+## よくあるタスク
+
+### 新しいフレームワークのドキュメント追加
+
+1. 公式ドキュメントから情報収集
+2. `docs/frameworks/[name]/` ディレクトリ作成
+3. マスタードキュメント作成（`[name].md`）
+4. 詳細ドキュメント作成（章別、機能別）
+5. `docs/frameworks.md` に追加
+6. リンク・統計情報を更新
+
+### 既存ドキュメントの改善
+
+1. ドキュメントを読み、改善点を特定
+2. コード例の追加・更新
+3. 説明の明確化
+4. 学習パスの改善
+5. リンクの検証・追加
+
+### ドキュメントのバージョン更新
+
+1. 新バージョンの公式ドキュメントを確認
+2. 変更点を特定（新機能、廃止された機能）
+3. 該当セクションを更新
+4. バージョン番号を更新
+5. 変更履歴を追記
+
+## トラブルシューティング
+
+### リンク切れ
+
+- 相対パスが正しいか確認
+- ファイル名・ディレクトリ名のスペルミスをチェック
+- ファイルが実際に存在するか確認
+
+### マークダウン表示崩れ
+
+- コードブロックの閉じタグ確認
+- テーブルの列数が一致しているか確認
+- 特殊文字のエスケープ確認
+
+## 参考リンク
+
+### ドキュメント作成
+
+- [Markdown Guide](https://www.markdownguide.org/)
+- [GitHub Flavored Markdown](https://github.github.com/gfm/)
+- [Conventional Commits](https://www.conventionalcommits.org/)
+
+### 技術リソース
+
+- 各フレームワーク・ライブラリの公式ドキュメント
+- `docs/frameworks.md` - フレームワーク一覧
+- `docs/libs.md` - ライブラリ一覧
+
+## プロジェクトの今後
+
+### 追加予定のドキュメント
+
+- Remix、Astro、SvelteKit（フレームワーク）
+- TanStack Query、React Hook Form、Zod（ライブラリ）
+- Supabase、Turso、Vercel（サービス）
+
+### 機能改善
+
+- ドキュメント検索機能
+- バージョン管理・更新追跡
+- 自動リンクチェック
+- マークダウンリント
+
+---
+
+**このドキュメントについて**: Claude Code がこのリポジトリで効率的に作業できるよう、プロジェクトの目的、構造、ワークフローを説明しています。
