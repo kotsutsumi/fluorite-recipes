@@ -1,0 +1,15 @@
+[package]
+name = "rust-pack-check"
+version = "0.1.0"
+edition = "2024"
+
+[features]
+default = []
+embeddings = ["dep:fastembed", "dep:once_cell"]
+
+[dependencies]
+anyhow = "1.0"
+clap = { version = "4.5", features = ["derive"] }
+fastembed = { version = "5.2", default-features = false, features = ["hf-hub-rustls-tls", "ort-download-binaries"], optional = true }
+once_cell = { version = "1.19", optional = true }
+rusqlite = { version = "0.31", features = ["bundled", "modern_sqlite"] }
