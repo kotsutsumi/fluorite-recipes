@@ -6,11 +6,12 @@
   "scripts": {
     "build": "tsc --project tsconfig.json",
     "typecheck": "tsc --noEmit",
-    "index": "tsx src/cli.ts",
-    "dev": "tsx watch src/cli.ts"
+    "index": "tsx index.ts",
+    "batch": "tsx batch.ts",
+    "dev": "tsx watch index.ts"
   },
   "bin": {
-    "fluorite-indexer": "dist/cli.js"
+    "fluorite-indexer": "dist/index.js"
   },
   "dependencies": {
     "commander": "^12.1.0",

@@ -1,0 +1,2 @@
+Place user-provided PDFs, Office documents, or images under this directory.
+The batch indexer will ingest every supported file on each run.
